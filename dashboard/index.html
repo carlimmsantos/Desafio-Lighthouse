@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>LH Nautical — Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --muted:          #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6; /* blue   — métricas neutras / rankings de magnitude */
+    --series-2:       #eb6834; /* orange — segunda série em comparações (ex.: real vs. previsto) */
+    --series-3:       #1baf7a; /* aqua   — reservado */
+    --bar-dim:        #dedcd3; /* contexto/não-destaque nos gráficos de "emphasis" */
+    --success-text:   #006300;
+    --status-good:     #0ca30c; /* estado positivo (ex.: pedido pago) */
+    --status-warning:  #fab219; /* estado de atenção (ex.: rascunho) */
+    --status-critical: #d03b3b; /* estado crítico (ex.: cancelado) */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --muted:          #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --bar-dim:        #33332f;
+      --success-text:   #0ca30c;
+      --status-good:     #0ca30c;
+      --status-warning:  #fab219;
+      --status-critical: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted:          #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --bar-dim:        #33332f;
+    --success-text:   #0ca30c;
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-critical: #e66767;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  header.page-header {
+    margin-bottom: 28px;
+  }
+  header.page-header .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+  header.page-header h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+  header.page-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 720px;
+    line-height: 1.5;
+  }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .kpi {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .kpi .label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0 0 6px;
+  }
+  .kpi .value {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    font-variant-numeric: proportional-nums;
+  }
+  .kpi .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 4px 0 0;
+  }
+
+  section.q {
+    margin-bottom: 28px;
+  }
+  section.q .q-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  section.q .q-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--series-1);
+    background: color-mix(in srgb, var(--series-1) 12%, transparent);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  section.q h2 {
+    font-size: 17px;
+    margin: 0;
+  }
+  section.q .q-sub {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 4px 0 14px;
+    max-width: 760px;
+    line-height: 1.5;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .grid-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+  }
+  .chart-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 10px 0 0;
+    line-height: 1.5;
+  }
+  svg.chart { display: block; width: 100%; height: auto; overflow: visible; }
+  svg.chart text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text-secondary); }
+  svg.chart text.value-label { fill: var(--text-primary); font-weight: 600; }
+  svg.chart text.axis-label { fill: var(--muted); }
+  svg.chart .grid-line { stroke: var(--grid); stroke-width: 1; }
+  svg.chart .baseline { stroke: var(--baseline); stroke-width: 1; }
+  svg.chart .bar { cursor: pointer; }
+  svg.chart .bar:hover { opacity: 0.85; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ---- Filtros ---- */
+  .filter-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .filter-bar .filter-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 100%;
+    margin-bottom: 2px;
+  }
+  .filter-field { display: flex; flex-direction: column; gap: 4px; }
+  .filter-field label { font-size: 11px; color: var(--text-secondary); }
+  .filter-field select,
+  .filter-field input[type="month"] {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 6px 10px;
+    min-width: 120px;
+  }
+  .filter-reset {
+    font-size: 12px;
+    color: var(--series-1);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 4px;
+    text-decoration: underline;
+  }
+  .chart-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .filter-live-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 8px 0 0;
+  }
+
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--text-primary);
+    color: var(--surface-1);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    transition: opacity 0.08s ease;
+    z-index: 50;
+    white-space: nowrap;
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip b { font-weight: 700; }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.data-table th, table.data-table td {
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--grid);
+  }
+  table.data-table th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  table.data-table td.num, table.data-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  .pill-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .status-ok { color: var(--success-text); font-weight: 600; }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  footer code {
+    background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 760px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-header">
+    <p class="eyebrow">LH Nautical · Desafio Lighthouse</p>
+    <h1>Dashboard executivo — visão consolidada</h1>
+    <p>Resumo das 7 questões do desafio: qualidade dos dados, modelagem e carga em PostgreSQL, clientes fiéis, sazonalidade de vendas, previsão de demanda e recomendação de produtos. Todos os números abaixo vêm diretamente das consultas e scripts em <code>sql/</code> e <code>src/</code> — ver <code>answers/respostas.md</code> para o detalhamento de cada questão.</p>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <p class="label">Pedidos totais</p>
+      <p class="value">48.998</p>
+      <p class="sub">01/01/2020 – 31/12/2026</p>
+    </div>
+    <div class="kpi">
+      <p class="label">Clientes cadastrados</p>
+      <p class="value">2.000</p>
+      <p class="sub">PF e PJ</p>
+    </div>
+    <div class="kpi">
+      <p class="label">Ticket médio (todos os pedidos)</p>
+      <p class="value">R$ 28.704,99</p>
+      <p class="sub">min R$ 32,62 · máx R$ 127.262,02</p>
+    </div>
+    <div class="kpi">
+      <p class="label">Faturamento em pedidos pagos</p>
+      <p class="value">R$ 985,7 M</p>
+      <p class="sub">34.365 pedidos com status "paid"</p>
+    </div>
+  </div>
+
+  <!-- ============================= Filtro global de período ============================= -->
+  <div class="card filter-bar">
+    <p class="filter-title">Filtro de período (afeta os gráficos da Questão 1 e Questão 5)</p>
+    <div class="filter-field">
+      <label for="filter-from">De</label>
+      <input type="month" id="filter-from" value="2020-01" min="2020-01" max="2026-12">
+    </div>
+    <div class="filter-field">
+      <label for="filter-to">Até</label>
+      <input type="month" id="filter-to" value="2026-12" min="2020-01" max="2026-12">
+    </div>
+    <button class="filter-reset" id="filter-reset-period" type="button">Ver período completo</button>
+  </div>
+
+  <!-- ============================= Q1 ============================= -->
+  <section class="q">
+    <div class="q-head"><span class="q-tag">Q1</span><h2>EDA — qualidade da tabela orders</h2></div>
+    <p class="q-sub">Antes de qualquer análise, a base precisa de um diagnóstico de confiabilidade. Dois achados condicionam todas as questões seguintes.</p>
+    <div class="grid-1">
+      <div class="card">
+        <div class="chart-controls">
+          <p class="chart-title" style="margin:0;">Distribuição de status dos pedidos</p>
+        </div>
+        <div class="chart-controls">
+          <div class="filter-field">
+            <label for="q1-channel">Canal</label>
+            <select id="q1-channel">
+              <option value="all" selected>Todos</option>
+              <option value="pos">Lojas físicas (pos)</option>
+              <option value="ecommerce">E-commerce</option>
+            </select>
+          </div>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--status-good)"></span>Paid (receita realizada)</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--series-1)"></span>Confirmed (em andamento)</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--status-warning)"></span>Draft (rascunho)</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--status-critical)"></span>Cancelled</span>
+        </div>
+        <svg class="chart" id="chart-q1-status" viewBox="0 0 760 200"></svg>
+        <p class="chart-note">15% dos pedidos (cancelled + draft) não representam receita realizada — relevante para qualquer soma de <code>total</code>. Cores por estado do pedido (paleta de status), não por ranking.</p>
+        <p class="filter-live-note" id="q1-live-note"></p>
+      </div>
+      <div class="card">
+        <p class="chart-title">Achados de confiabilidade</p>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Outliers em <code>total</code> (regra IQR 1,5×)</td><td class="num">452 pedidos (0,9%)</td></tr>
+            <tr><td><code>salesperson_id</code> nulo</td><td class="num">24.131 (49,2%)</td></tr>
+            <tr><td>Pedidos via e-commerce (sem vendedor)</td><td class="num">34.342 (70,1%)</td></tr>
+            <tr><td>Data máxima de <code>created_at</code></td><td class="num">31/12/2026</td></tr>
+            <tr><td>Colunas 100% preenchidas</td><td class="num">12 de 13</td></tr>
+          </tbody>
+        </table>
+        <p class="chart-note">A data máxima está ~5 meses à frente da data de referência da análise (12/08/2026) — pedidos com data futura precisam ser tratados antes de qualquer série temporal.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= Q2/Q3 ============================= -->
+  <section class="q">
+    <div class="q-head"><span class="q-tag">Q2 · Q3</span><h2>Schema e carga em PostgreSQL</h2></div>
+    <p class="q-sub"><code>src/q2_generate_schema.py</code> lê os 24 CSVs de <code>database/</code> e infere tipo/nulidade de cada coluna direto dos dados (sem modelo hardcoded), gerando <code>sql/q2_schema.sql</code>; <code>src/q3_load_postgres.py</code> aplica esse schema e carrega os CSVs via <code>COPY</code>, validando linha a linha contra a origem.</p>
+    <div class="card">
+      <div class="pill-row">
+        <span class="pill">24 tabelas criadas</span>
+        <span class="pill">24 CSVs carregados</span>
+        <span class="pill">0 divergências de contagem</span>
+        <span class="pill status-ok">Validado em postgres:16-alpine</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= Q4 ============================= -->
+  <section class="q">
+    <div class="q-head"><span class="q-tag">Q4</span><h2>Clientes fiéis: ticket médio × diversidade de categorias</h2></div>
+    <p class="q-sub">Top 10 clientes por ticket médio, entre os que compraram de 13 ou mais categorias distintas — todos os 10 atingiram o máximo de 14 categorias.</p>
+    <div class="grid-1">
+      <div class="card">
+        <p class="chart-title">Top 10 — ticket médio (R$)</p>
+        <svg class="chart" id="chart-q4-clientes" viewBox="0 0 760 330"></svg>
+      </div>
+      <div class="card">
+        <div class="chart-controls">
+          <p class="chart-title" style="margin:0;">Categoria mais comprada pelo grupo (soma de itens)</p>
+        </div>
+        <div class="chart-controls">
+          <div class="filter-field">
+            <label for="q4-topn">Mostrar</label>
+            <select id="q4-topn">
+              <option value="5">Top 5</option>
+              <option value="10" selected>Top 10</option>
+              <option value="14">Todas (14)</option>
+            </select>
+          </div>
+        </div>
+        <svg class="chart" id="chart-q4-categorias" viewBox="0 0 760 415"></svg>
+        <p class="chart-note">Hélices concentra o maior volume de itens (492) entre os 10 clientes fiéis. Mesmo padrão de destaque (azul = líder, cinza = contexto) usado no gráfico da Questão 5.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= Q5 ============================= -->
+  <section class="q">
+    <div class="q-head"><span class="q-tag">Q5</span><h2>Pior dia da semana para lojas físicas</h2></div>
+    <p class="q-sub">Dimensão de calendário completa (todo dia do período conta, mesmo sem venda) × vendas do canal <code>pos</code>. Quinta-feira tem a pior média — mas está tecnicamente empatada com Domingo e Segunda (diferença &lt; 1%). Usa o mesmo filtro de período do topo da página.</p>
+    <div class="card">
+      <div class="chart-controls">
+        <p class="chart-title" style="margin:0;">Média de vendas por dia da semana (R$/dia)</p>
+      </div>
+      <div class="chart-controls">
+        <div class="filter-field">
+          <label for="q5-channel">Canal</label>
+          <select id="q5-channel">
+            <option value="pos" selected>Lojas físicas (pos)</option>
+            <option value="ecommerce">E-commerce</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+      </div>
+      <svg class="chart" id="chart-q5-weekday" viewBox="0 0 760 300"></svg>
+      <p class="chart-note" id="q5-chart-note">Destaque: Quinta-feira, pior média (R$ 157.154,32/dia) — considerando todos os dias do calendário, inclusive os sem nenhuma venda registrada.</p>
+      <p class="filter-live-note" id="q5-live-note"></p>
+    </div>
+  </section>
+
+  <!-- ============================= Q6 ============================= -->
+  <section class="q">
+    <div class="q-head"><span class="q-tag">Q6</span><h2>Previsão de demanda — Bússola de Bordo 702</h2></div>
+    <p class="q-sub">Baseline de média móvel de 3 meses, treinado até 12/2025, testado no 1º trimestre de 2026 (walk-forward, sem data leakage).</p>
+    <div class="grid-1">
+      <div class="card">
+        <p class="chart-title">Previsto × Real — unidades/mês</p>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--series-1)"></span>Previsto (méd. móvel 3m)</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--series-2)"></span>Real</span>
+        </div>
+        <svg class="chart" id="chart-q6-forecast" viewBox="0 0 760 320"></svg>
+      </div>
+      <div class="card">
+        <p class="chart-title">Métricas do baseline</p>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Soma prevista Q1/2026 (arred.)</td><td class="num">107 un.</td></tr>
+            <tr><td>Soma real Q1/2026</td><td class="num">156 un.</td></tr>
+            <tr><td>MAE (erro médio absoluto)</td><td class="num">16,44 un./mês</td></tr>
+            <tr><td>Maior erro</td><td class="num">Jan/2026 (63%)</td></tr>
+          </tbody>
+        </table>
+        <p class="chart-note">Baseline defasado: dez/2025 foi um mês fraco (14 un.) e "arrasta" a previsão de janeiro para baixo, bem abaixo do pico sazonal de verão. Fev/Mar (já com jan real na janela) ficam bem mais próximos do real.</p>
+        <p class="filter-live-note">Sem filtro aqui: o treino/teste é um recorte fixo definido no enunciado da Questão 6, não um período livre.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= Q7 ============================= -->
+  <section class="q">
+    <div class="q-head"><span class="q-tag">Q7</span><h2>Recomendação — "quem comprou isso, também levou"</h2></div>
+    <p class="q-sub">Similaridade de cosseno entre vetores binários (comprou / não comprou) de cada produto, a partir da matriz usuário × produto de 2.000 clientes × 500 produtos.</p>
+    <div class="card">
+      <div class="chart-controls">
+        <p class="chart-title" style="margin:0;" id="q7-chart-title">Top 5 produtos mais similares a "Motor de Popa 1949"</p>
+      </div>
+      <div class="chart-controls">
+        <div class="filter-field">
+          <label for="q7-product">Produto de referência</label>
+          <select id="q7-product"></select>
+        </div>
+        <div class="filter-field">
+          <label for="q7-topn">Mostrar</label>
+          <select id="q7-topn">
+            <option value="5" selected>Top 5</option>
+            <option value="10">Top 10</option>
+          </select>
+        </div>
+      </div>
+      <svg class="chart" id="chart-q7-similares" viewBox="0 0 760 220"></svg>
+      <p class="chart-note" id="q7-chart-note">Scores modestos (0,24–0,26) em toda a base — sintoma de uma base densa (~271 compradores/produto em média), onde o sinal de afinidade real se dilui em ruído estatístico.</p>
+    </div>
+  </section>
+
+  <footer>
+    Gerado a partir de <code>database/*.csv</code> via <code>sql/q1_orders_eda.sql</code>, <code>sql/q4_customer_loyalty.sql</code>, <code>sql/q5_calendar_weekday_sales.sql</code>, <code>src/q6_demand_forecast.py</code> e <code>src/q7_recommender.py</code>. Detalhamento completo de cada questão em <code>answers/respostas.md</code>.
+  </footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var tooltipEl = document.getElementById("tooltip");
+  function showTooltip(evt, html) {
+    tooltipEl.innerHTML = html;
+    tooltipEl.style.left = evt.clientX + "px";
+    tooltipEl.style.top = (evt.clientY - 10) + "px";
+    tooltipEl.classList.add("visible");
+  }
+  function moveTooltip(evt) {
+    tooltipEl.style.left = evt.clientX + "px";
+    tooltipEl.style.top = (evt.clientY - 10) + "px";
+  }
+  function hideTooltip() {
+    tooltipEl.classList.remove("visible");
+  }
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function roundedRightRectPath(x0, y0, w, h, r) {
+    var x1 = x0 + w;
+    var y1 = y0 + h;
+    if (w < r) r = Math.max(w, 0.5);
+    return [
+      "M", x0, y0,
+      "L", x1 - r, y0,
+      "Q", x1, y0, x1, y0 + r,
+      "L", x1, y1 - r,
+      "Q", x1, y1, x1 - r, y1,
+      "L", x0, y1,
+      "Z"
+    ].join(" ");
+  }
+
+  function roundedTopRectPath(x0, y0, w, h, r) {
+    var x1 = x0 + w;
+    var y1 = y0 + h;
+    if (h < r) r = Math.max(h, 0.5);
+    return [
+      "M", x0, y1,
+      "L", x0, y0 + r,
+      "Q", x0, y0, x0 + r, y0,
+      "L", x1 - r, y0,
+      "Q", x1, y0, x1, y0 + r,
+      "L", x1, y1,
+      "Z"
+    ].join(" ");
+  }
+
+  function fmtInt(n) { return Math.round(n).toLocaleString("pt-BR"); }
+  function fmtBRL(n) {
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  }
+  function fmtBRL2(n) {
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 });
+  }
+
+  // ---- Horizontal bar chart -------------------------------------------
+  // data: [{label, value, dim:false}], viewBox width assumed 760
+  function renderHBar(svgId, data, opts) {
+    opts = opts || {};
+    var svg = document.getElementById(svgId);
+    svg.innerHTML = ""; // permite re-renderizar o mesmo <svg> quando um filtro muda
+    var vb = svg.viewBox.baseVal;
+    var W = vb.width;
+    var labelW = opts.labelW || 190;
+    var padRight = 70;
+    var plotX0 = labelW, plotX1 = W - padRight;
+    var barH = opts.barH || 18;
+    var gap = opts.gap || 12;
+    var n = data.length;
+    var maxVal = opts.max || Math.max.apply(null, data.map(function (d) { return d.value; })) || 1;
+    var color = opts.color || "var(--series-1)";
+    var fmt = opts.fmt || fmtInt;
+    var topPad = 6;
+    var fontSize = opts.fontSize || 12;
+
+    if (opts.autoHeight !== false) {
+      var contentH = topPad + Math.max(n, 1) * (barH + gap) - gap + 12;
+      svg.setAttribute("viewBox", "0 0 " + W + " " + contentH);
+    }
+
+    // gridlines (4 ticks)
+    var ticks = 4;
+    for (var t = 0; t <= ticks; t++) {
+      var gx = plotX0 + (plotX1 - plotX0) * (t / ticks);
+      svg.appendChild(el("line", { x1: gx, x2: gx, y1: topPad, y2: topPad + n * (barH + gap) - gap, class: "grid-line" }));
+    }
+    svg.appendChild(el("line", { x1: plotX0, x2: plotX0, y1: topPad, y2: topPad + n * (barH + gap) - gap, class: "baseline" }));
+
+    data.forEach(function (d, i) {
+      var y = topPad + i * (barH + gap);
+      var w = (plotX1 - plotX0) * (d.value / maxVal);
+      var barColor = d.color || (d.dim ? "var(--bar-dim)" : color);
+
+      var label = el("text", { x: plotX0 - 10, y: y + barH / 2 + 4, "text-anchor": "end", "font-size": fontSize });
+      label.textContent = d.label;
+      svg.appendChild(label);
+
+      var path = el("path", { d: roundedRightRectPath(plotX0, y, Math.max(w, 1), barH, 4), fill: barColor, class: "bar" });
+      path.addEventListener("mousemove", function (evt) {
+        showTooltip(evt, "<b>" + d.label + "</b><br>" + fmt(d.value));
+      });
+      path.addEventListener("mouseleave", hideTooltip);
+      svg.appendChild(path);
+
+      var valueLabel = el("text", { x: plotX0 + w + 8, y: y + barH / 2 + 4, "font-size": fontSize, class: "value-label" });
+      valueLabel.textContent = fmt(d.value);
+      svg.appendChild(valueLabel);
+    });
+  }
+
+  // ---- Vertical column chart -------------------------------------------
+  function renderColumn(svgId, data, opts) {
+    opts = opts || {};
+    var svg = document.getElementById(svgId);
+    svg.innerHTML = ""; // permite re-renderizar o mesmo <svg> quando um filtro muda
+    var vb = svg.viewBox.baseVal;
+    var W = vb.width, H = vb.height;
+    var padTop = 14, padBottom = 34, padSide = 10;
+    var plotY0 = padTop, plotY1 = H - padBottom;
+    var n = data.length;
+    var colW = opts.colW || 24;
+    var maxVal = opts.max || Math.max.apply(null, data.map(function (d) { return d.value; })) || 1;
+    var color = opts.color || "var(--series-1)";
+    var fmt = opts.fmt || fmtInt;
+    var slot = (W - padSide * 2) / n;
+    var fontSize = opts.fontSize || 11;
+
+    var ticks = 4;
+    for (var t = 0; t <= ticks; t++) {
+      var gy = plotY1 - (plotY1 - plotY0) * (t / ticks);
+      svg.appendChild(el("line", { x1: padSide, x2: W - padSide, y1: gy, y2: gy, class: "grid-line" }));
+    }
+    svg.appendChild(el("line", { x1: padSide, x2: W - padSide, y1: plotY1, y2: plotY1, class: "baseline" }));
+
+    data.forEach(function (d, i) {
+      var cx = padSide + slot * i + slot / 2;
+      var h = (plotY1 - plotY0) * (d.value / maxVal);
+      var x0 = cx - colW / 2;
+      var y0 = plotY1 - h;
+      var barColor = d.color || (d.dim ? "var(--bar-dim)" : color);
+
+      var path = el("path", { d: roundedTopRectPath(x0, y0, colW, Math.max(h, 1), 4), fill: barColor, class: "bar" });
+      path.addEventListener("mousemove", function (evt) {
+        showTooltip(evt, "<b>" + d.label + "</b><br>" + fmt(d.value));
+      });
+      path.addEventListener("mouseleave", hideTooltip);
+      svg.appendChild(path);
+
+      var valueLabel = el("text", { x: cx, y: y0 - 8, "text-anchor": "middle", "font-size": fontSize + 1, class: "value-label" });
+      valueLabel.textContent = fmt(d.value);
+      svg.appendChild(valueLabel);
+
+      var label = el("text", { x: cx, y: plotY1 + 18, "text-anchor": "middle", "font-size": fontSize, class: "axis-label" });
+      label.textContent = d.label;
+      svg.appendChild(label);
+    });
+  }
+
+  // ---- Grouped column chart (2 series) ---------------------------------
+  function renderGroupedColumn(svgId, categories, series, opts) {
+    opts = opts || {};
+    var svg = document.getElementById(svgId);
+    svg.innerHTML = "";
+    var vb = svg.viewBox.baseVal;
+    var W = vb.width, H = vb.height;
+    var padTop = 14, padBottom = 30, padSide = 16;
+    var plotY0 = padTop, plotY1 = H - padBottom;
+    var n = categories.length;
+    var slot = (W - padSide * 2) / n;
+    var groupGap = 10;
+    var barW = (slot - groupGap * 2) / series.length;
+    var allVals = [];
+    series.forEach(function (s) { s.values.forEach(function (v) { allVals.push(v); }); });
+    var maxVal = opts.max || Math.max.apply(null, allVals);
+    var fmt = opts.fmt || fmtInt;
+    var fontSize = opts.fontSize || 12;
+
+    var ticks = 4;
+    for (var t = 0; t <= ticks; t++) {
+      var gy = plotY1 - (plotY1 - plotY0) * (t / ticks);
+      svg.appendChild(el("line", { x1: padSide, x2: W - padSide, y1: gy, y2: gy, class: "grid-line" }));
+    }
+    svg.appendChild(el("line", { x1: padSide, x2: W - padSide, y1: plotY1, y2: plotY1, class: "baseline" }));
+
+    categories.forEach(function (cat, i) {
+      var groupX0 = padSide + slot * i + groupGap;
+      series.forEach(function (s, si) {
+        var val = s.values[i];
+        var h = (plotY1 - plotY0) * (val / maxVal);
+        var x0 = groupX0 + si * barW;
+        var y0 = plotY1 - h;
+        var path = el("path", { d: roundedTopRectPath(x0, y0, barW - 4, Math.max(h, 1), 3), fill: s.color, class: "bar" });
+        path.addEventListener("mousemove", function (evt) {
+          showTooltip(evt, "<b>" + s.name + " — " + cat + "</b><br>" + fmt(val));
+        });
+        path.addEventListener("mouseleave", hideTooltip);
+        svg.appendChild(path);
+
+        var valueLabel = el("text", { x: x0 + (barW - 4) / 2, y: y0 - 6, "text-anchor": "middle", "font-size": fontSize - 1, class: "value-label" });
+        valueLabel.textContent = fmt(val);
+        svg.appendChild(valueLabel);
+      });
+
+      var label = el("text", { x: padSide + slot * i + slot / 2, y: plotY1 + 20, "text-anchor": "middle", "font-size": fontSize, class: "axis-label" });
+      label.textContent = cat;
+      svg.appendChild(label);
+    });
+  }
+
+  // ============================================================
+  // Dados granulares para os filtros (window.DASHBOARD_DATA, carregado de data.js)
+  // ============================================================
+  var DATA = window.DASHBOARD_DATA || { monthly: [], daily: [], productBuyers: {}, productNames: [] };
+
+  var DAILY_INDEX = {};
+  DATA.daily.forEach(function (row) {
+    var date = row[0], channel = row[1], total = row[2];
+    if (!DAILY_INDEX[date]) DAILY_INDEX[date] = {};
+    DAILY_INDEX[date][channel] = total;
+  });
+
+  var PRODUCT_NAME_BY_ID = {};
+  DATA.productNames.forEach(function (r) { PRODUCT_NAME_BY_ID[r[0]] = r[1]; });
+
+  var WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]; // índice = Date#getUTCDay()
+  var WEEKDAY_FULL_NAMES = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+  var WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // exibição Seg..Dom
+
+  // Soma contagens de orders.csv por (mês, canal, status) dentro do intervalo — mesma
+  // lógica de sql/q1_orders_eda.sql, só que agregada por mês em vez de por linha.
+  function computeStatusCounts(channel, fromMonth, toMonth) {
+    var totals = { paid: 0, confirmed: 0, cancelled: 0, draft: 0 };
+    var n = 0;
+    DATA.monthly.forEach(function (row) {
+      var month = row[0], ch = row[1], status = row[2], count = row[3];
+      if (month < fromMonth || month > toMonth) return;
+      if (channel !== "all" && ch !== channel) return;
+      totals[status] = (totals[status] || 0) + count;
+      n += count;
+    });
+    return { totals: totals, n: n };
+  }
+
+  // Reproduz a lógica de sql/q5_calendar_weekday_sales.sql no navegador: percorre TODO
+  // dia entre fromMonth e toMonth (calendário completo, não só os dias com venda) e
+  // soma/conta por dia da semana — dias sem registro em DAILY_INDEX entram como 0.
+  function computeWeekdayAverages(channel, fromMonth, toMonth) {
+    var fromParts = fromMonth.split("-").map(Number);
+    var toParts = toMonth.split("-").map(Number);
+    var fromDate = new Date(Date.UTC(fromParts[0], fromParts[1] - 1, 1));
+    var toDate = new Date(Date.UTC(toParts[0], toParts[1], 0)); // último dia do mês "até"
+    var sums = [0, 0, 0, 0, 0, 0, 0];
+    var counts = [0, 0, 0, 0, 0, 0, 0];
+    for (var d = new Date(fromDate); d <= toDate; d.setUTCDate(d.getUTCDate() + 1)) {
+      var dow = d.getUTCDay();
+      var dateStr = d.toISOString().slice(0, 10);
+      var rec = DAILY_INDEX[dateStr];
+      var val = 0;
+      if (rec) {
+        if (channel === "all") val = (rec.pos || 0) + (rec.ecommerce || 0);
+        else val = rec[channel] || 0;
+      }
+      sums[dow] += val;
+      counts[dow] += 1;
+    }
+    return { sums: sums, counts: counts };
+  }
+
+  // Similaridade de cosseno entre dois produtos a partir dos conjuntos de compradores
+  // (mesma fórmula de src/q7_recommender.py, recalculada aqui no navegador).
+  function cosineSimilarity(productIdA, productIdB) {
+    var a = DATA.productBuyers[productIdA];
+    var b = DATA.productBuyers[productIdB];
+    if (!a || !b || !a.length || !b.length) return 0;
+    var setB = new Set(b);
+    var inter = 0;
+    for (var i = 0; i < a.length; i++) if (setB.has(a[i])) inter++;
+    return inter / Math.sqrt(a.length * b.length);
+  }
+
+  function topSimilarProducts(refId, topN) {
+    var results = [];
+    Object.keys(DATA.productBuyers).forEach(function (pidStr) {
+      if (pidStr === String(refId)) return;
+      results.push({ id: pidStr, name: PRODUCT_NAME_BY_ID[pidStr], score: cosineSimilarity(String(refId), pidStr) });
+    });
+    results.sort(function (a, b) { return b.score - a.score; });
+    return results.slice(0, topN);
+  }
+
+  // ---------------- Q1: status por período + canal ----------------
+  function renderQ1() {
+    var channel = document.getElementById("q1-channel").value;
+    var from = document.getElementById("filter-from").value;
+    var to = document.getElementById("filter-to").value;
+    var result = computeStatusCounts(channel, from, to);
+    var t = result.totals;
+    renderHBar("chart-q1-status", [
+      { label: "Paid", value: t.paid, color: "var(--status-good)" },
+      { label: "Confirmed", value: t.confirmed, color: "var(--series-1)" },
+      { label: "Cancelled", value: t.cancelled, color: "var(--status-critical)" },
+      { label: "Draft", value: t.draft, color: "var(--status-warning)" }
+    ], { labelW: 100, barH: 32, gap: 18, fontSize: 13, fmt: fmtInt });
+    document.getElementById("q1-live-note").textContent =
+      result.n.toLocaleString("pt-BR") + " pedidos no período/canal selecionado (" + from + " a " + to + ").";
+  }
+
+  // ---------------- Q5: média de vendas por dia da semana ----------------
+  function renderQ5() {
+    var channel = document.getElementById("q5-channel").value;
+    var from = document.getElementById("filter-from").value;
+    var to = document.getElementById("filter-to").value;
+    var result = computeWeekdayAverages(channel, from, to);
+    var rows = WEEKDAY_ORDER.map(function (dow) {
+      var avg = result.counts[dow] ? result.sums[dow] / result.counts[dow] : 0;
+      return { dow: dow, label: WEEKDAY_LABELS[dow], value: avg };
+    });
+    var worst = rows.reduce(function (min, r) { return r.value < min.value ? r : min; }, rows[0]);
+    rows.forEach(function (r) { r.dim = r.dow !== worst.dow; });
+    var maxVal = (Math.max.apply(null, rows.map(function (r) { return r.value; })) || 1) * 1.08;
+    renderColumn("chart-q5-weekday", rows, { colW: 60, fmt: fmtBRL, max: maxVal });
+
+    var totalDays = result.counts.reduce(function (a, b) { return a + b; }, 0);
+    document.getElementById("q5-live-note").textContent =
+      totalDays.toLocaleString("pt-BR") + " dias no período selecionado (" + from + " a " + to + ").";
+    var channelLabel = channel === "all" ? "todos os canais" : (channel === "pos" ? "lojas físicas" : "e-commerce");
+    document.getElementById("q5-chart-note").textContent =
+      "Destaque: " + WEEKDAY_FULL_NAMES[worst.dow] + ", pior média (" + fmtBRL2(worst.value) + "/dia) em " + channelLabel +
+      " — considerando todos os dias do período, inclusive os sem nenhuma venda registrada.";
+  }
+
+  // ---------------- Q4 — categorias: Top N ----------------
+  // Padrão "emphasis" (1 hue + cinza de contexto): mesmo tratamento do gráfico de
+  // dia da semana da Questão 5 — o líder do ranking em azul, o resto em cinza.
+  var Q4_CATS_FULL = [
+    { label: "Hélices", value: 492 },
+    { label: "Coletes Salva-Vidas", value: 393 },
+    { label: "Eletrônica Náutica", value: 392 },
+    { label: "Âncoras", value: 387 },
+    { label: "Iluminação", value: 333 },
+    { label: "Manutenção", value: 330 },
+    { label: "Segurança", value: 325 },
+    { label: "Velas", value: 313 },
+    { label: "Pintura Marítima", value: 307 },
+    { label: "Acessórios de Convés", value: 305 },
+    { label: "Motores", value: 279 },
+    { label: "Pesca", value: 278 },
+    { label: "Equipamentos", value: 255 },
+    { label: "Cabos", value: 254 }
+  ];
+  function renderQ4Categorias() {
+    var topN = parseInt(document.getElementById("q4-topn").value, 10);
+    var data = Q4_CATS_FULL.slice(0, topN).map(function (d, i) {
+      return { label: d.label, value: d.value, dim: i !== 0 };
+    });
+    renderHBar("chart-q4-categorias", data, { labelW: 170, barH: 20, gap: 9, fontSize: 12, fmt: function (v) { return fmtInt(v) + " itens"; } });
+  }
+
+  // ---------------- Q7 — produto de referência + Top N ----------------
+  function populateQ7ProductSelect() {
+    var select = document.getElementById("q7-product");
+    var options = DATA.productNames.slice().sort(function (a, b) { return a[1].localeCompare(b[1], "pt-BR"); });
+    options.forEach(function (row) {
+      var opt = document.createElement("option");
+      opt.value = row[0];
+      opt.textContent = row[1];
+      select.appendChild(opt);
+    });
+    select.value = "180"; // Motor de Popa 1949 — item de referência original da Questão 7
+  }
+
+  function renderQ7() {
+    var refId = document.getElementById("q7-product").value;
+    var topN = parseInt(document.getElementById("q7-topn").value, 10);
+    var refName = PRODUCT_NAME_BY_ID[refId] || "?";
+    var top = topSimilarProducts(refId, topN);
+    var data = top.map(function (t) { return { label: t.name, value: t.score }; });
+    var maxScore = data.length ? Math.max.apply(null, data.map(function (d) { return d.value; })) : 0.1;
+    renderHBar("chart-q7-similares", data, { labelW: 170, barH: 20, gap: 12, max: (maxScore * 1.15) || 0.1, fmt: function (v) { return v.toFixed(4); } });
+    document.getElementById("q7-chart-title").textContent = "Top " + topN + ' produtos mais similares a "' + refName + '"';
+    document.getElementById("q7-chart-note").textContent = data.length
+      ? ("Scores entre " + data[data.length - 1].value.toFixed(4) + " e " + data[0].value.toFixed(4) +
+         " — similaridade de cosseno recalculada no navegador a partir da matriz usuário × produto (2.000 clientes × 500 produtos).")
+      : "Produto sem compradores suficientes para calcular similaridade.";
+  }
+
+  // ---------------- wiring dos filtros ----------------
+  function refreshPeriodCharts() { renderQ1(); renderQ5(); }
+
+  document.getElementById("filter-from").addEventListener("change", refreshPeriodCharts);
+  document.getElementById("filter-to").addEventListener("change", refreshPeriodCharts);
+  document.getElementById("filter-reset-period").addEventListener("click", function () {
+    document.getElementById("filter-from").value = "2020-01";
+    document.getElementById("filter-to").value = "2026-12";
+    refreshPeriodCharts();
+  });
+  document.getElementById("q1-channel").addEventListener("change", renderQ1);
+  document.getElementById("q5-channel").addEventListener("change", renderQ5);
+  document.getElementById("q4-topn").addEventListener("change", renderQ4Categorias);
+  populateQ7ProductSelect();
+  document.getElementById("q7-product").addEventListener("change", renderQ7);
+  document.getElementById("q7-topn").addEventListener("change", renderQ7);
+
+  // ---------------- render inicial (estado default = respostas originais do desafio) ----------------
+  renderQ1();
+  renderQ5();
+  renderQ4Categorias();
+  renderQ7();
+
+  // ================= Q4 — top 10 clientes (estático: é a resposta literal da 4.1) =================
+  // Azul único (série 1): é um ranking de magnitude, não identidade — mesmo hue usado
+  // no gráfico da Questão 7, outro ranking de magnitude.
+  renderHBar("chart-q4-clientes", [
+    { label: "Cliente 22", value: 41839.94 },
+    { label: "Cliente 1477", value: 41648.30 },
+    { label: "Cliente 929", value: 41645.23 },
+    { label: "Cliente 1116", value: 40983.58 },
+    { label: "Cliente 1691", value: 40773.57 },
+    { label: "Cliente 774", value: 40340.44 },
+    { label: "Cliente 1470", value: 40021.27 },
+    { label: "Cliente 1599", value: 39904.66 },
+    { label: "Cliente 965", value: 39841.05 },
+    { label: "Cliente 1722", value: 39532.94 }
+  ], { labelW: 110, barH: 24, gap: 8, fontSize: 13, fmt: fmtBRL, max: 45000 });
+
+  // ================= Q6 — forecast vs real (estático: recorte fixo do enunciado) =================
+  // Mesmo par categórico (azul/laranja) usado em qualquer comparação "previsto vs. real"
+  // do dashboard — série 1 = valor de referência/modelo, série 2 = valor observado.
+  renderGroupedColumn("chart-q6-forecast",
+    ["Jan/2026", "Fev/2026", "Mar/2026"],
+    [
+      { name: "Previsto", values: [25.33, 39.67, 41.67], color: "var(--series-1)" },
+      { name: "Real", values: [69, 42, 45], color: "var(--series-2)" }
+    ],
+    { fmt: function (v) { return v.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " un."; }, max: 78, fontSize: 13 }
+  );
+
+})();
+</script>
+
+</body>
+</html>
